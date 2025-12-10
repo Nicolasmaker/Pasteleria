@@ -1,6 +1,7 @@
 # Pastelería Los Sabores
 
-Proyecto web para la Pastelería Los Sabores, desarrollado con Node.js, TypeScript y Vite.
+Proyecto de pasteleria, para prueba final de full stack.
+Desarrollado con Node.js, TypeScript y Vite.
 
 ## Requisitos
 
