@@ -1,7 +1,6 @@
-import React, { createContext, useState, useContext } from 'react';
-import pinaImage from '../images/piña.png';
-import milhojasImage from '../images/milhojas.png';
-import brazoReinaImage from '../images/brazoreina.png';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { productService } from '../services/product.service';
+import type { Product } from '../services/product.service';
 
 export interface Cake {
   id: string;
@@ -9,14 +8,22 @@ export interface Cake {
   description: string;
   price: number;
   image: string;
+  stock?: number;
+  disponible?: boolean;
+  categoriaId?: string;
 }
 
 interface CakeContextType {
   cakes: Cake[];
+  products: Product[];
+  isLoading: boolean;
+  error: string | null;
   addCake: (cake: Omit<Cake, 'id'>) => void;
   deleteCake: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  refreshProducts: () => Promise<void>;
+  getProductsByCategory: (categoryId: string) => Promise<void>;
 }
 
 const CakeContext = createContext<CakeContextType | undefined>(undefined);
@@ -29,57 +36,90 @@ export const useCakes = () => {
   return context;
 };
 
+// Función para convertir Product del backend a Cake del frontend
+const productToCake = (product: Product): Cake => {
+  return {
+    id: product.id,
+    name: product.nombre,
+    description: product.descripcion,
+    price: typeof product.precio === 'string' ? parseFloat(product.precio) : product.precio,
+    image: product.imagen || 'https://via.placeholder.com/300x200?text=Sin+Imagen',
+    stock: product.stock,
+    disponible: product.disponible,
+    categoriaId: product.categoriaId,
+  };
+};
+
 export const CakeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [cakes, setCakes] = useState<Cake[]>([
-    {
-      id: '1',
-      name: 'Torta de Milhojas',
-      description: 'Clásica torta chilena de finas capas de masa crujiente, rellena de abundante manjar y nueces picadas.',
-      price: 28990,
-      image: milhojasImage
-    },
-    {
-      id: '2',
-      name: 'Torta Tres Leches',
-      description: 'Bizcocho húmedo y esponjoso remojado en leche evaporada, condensada y crema, cubierto de merengue italiano.',
-      price: 24990,
-      image: 'https://upload.wikimedia.org/wikipedia/commons/c/ca/Pastel_de_Tres_Leches.jpg'
-    },
-    {
-      id: '3',
-      name: 'Brazo de Reina',
-      description: 'Tradicional rollo de bizcocho suave relleno con dulce de leche y espolvoreado con azúcar glas.',
-      price: 12990,
-      image: brazoReinaImage
-    },
-    {
-      id: '4',
-      name: 'Torta de Piña',
-      description: 'Fresca torta de bizcocho vainilla, rellena con crema chantilly y trozos de piña en almíbar.',
-      price: 22990,
-      image: pinaImage
-    },
-    {
-      id: '5',
-      name: 'Torta Panqueque Naranja',
-      description: 'Elegante torta de capas delgadas de bizcocho panqueque, rellenas con una suave crema de naranja natural.',
-      price: 26990,
-      image: 'https://upload.wikimedia.org/wikipedia/commons/6/65/Mille_crepe_cake.jpg'
-    }
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [cakes, setCakes] = useState<Cake[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  // Cargar productos al montar el componente
+  useEffect(() => {
+    refreshProducts();
+  }, []);
+
+  // Actualizar cakes cuando cambien los productos
+  useEffect(() => {
+    setCakes(products.map(productToCake));
+  }, [products]);
+
+  const refreshProducts = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await productService.getAll();
+      setProducts(data);
+    } catch (err: any) {
+      console.error('Error cargando productos:', err);
+      setError(err.response?.data?.message || 'Error al cargar productos');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getProductsByCategory = async (categoryId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await productService.getByCategory(categoryId);
+      setProducts(data);
+    } catch (err: any) {
+      console.error('Error cargando productos por categoría:', err);
+      setError(err.response?.data?.message || 'Error al cargar productos');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Mantener funciones legacy para compatibilidad (ahora podrían usar el backend)
   const addCake = (cake: Omit<Cake, 'id'>) => {
+    // Esta función podría actualizar en el backend si el usuario es admin
     const newCake = { ...cake, id: Date.now().toString() };
     setCakes([...cakes, newCake]);
   };
 
   const deleteCake = (id: string) => {
+    // Esta función podría eliminar del backend si el usuario es admin
     setCakes(prev => prev.filter(cake => cake.id !== id));
   };
 
   return (
-    <CakeContext.Provider value={{ cakes, addCake, deleteCake, searchQuery, setSearchQuery }}>
+    <CakeContext.Provider value={{ 
+      cakes, 
+      products,
+      isLoading,
+      error,
+      addCake, 
+      deleteCake, 
+      searchQuery, 
+      setSearchQuery,
+      refreshProducts,
+      getProductsByCategory
+    }}>
       {children}
     </CakeContext.Provider>
   );

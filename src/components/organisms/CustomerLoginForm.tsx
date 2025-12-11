@@ -11,10 +11,10 @@ export const CustomerLoginForm: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const success = login(email, password);
+    const success = await login(email, password);
     if (success) {
       navigate('/'); // Redirigir al home o dashboard de cliente
     } else {

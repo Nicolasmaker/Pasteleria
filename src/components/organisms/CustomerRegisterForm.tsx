@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import { FormField } from '../molecules/FormField';
 import { Button } from '../atoms/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export const CustomerRegisterForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
   const { register } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    lastName: '',
-    phone: '',
+    fullName: '',
     email: '',
-    address: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -22,22 +21,27 @@ export const CustomerRegisterForm: React.FC<{ onSuccess?: () => void }> = ({ onS
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     // Validaciones básicas
-    if (!formData.name || !formData.lastName || !formData.email || !formData.password || !formData.phone || !formData.address) {
+    if (!formData.fullName || !formData.email || !formData.password) {
       setError('Todos los campos son obligatorios');
       return;
     }
 
-    const success = register(formData);
+    if (formData.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    const success = await register(formData);
     if (success) {
-      alert('Registro exitoso. Por favor inicia sesión.');
-      if (onSuccess) onSuccess();
+      // El backend hace auto-login, así que redirigimos directamente
+      navigate('/productos');
     } else {
-      setError('El correo ya está registrado');
+      setError('Error en el registro. El correo podría estar ya registrado.');
     }
   };
 
@@ -46,34 +50,12 @@ export const CustomerRegisterForm: React.FC<{ onSuccess?: () => void }> = ({ onS
       <h2 style={{ textAlign: 'center', color: 'var(--primary-color)' }}>Registro de Cliente</h2>
       {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <FormField 
-          label="Nombres" 
-          name="name"
-          value={formData.name} 
-          onChange={handleChange} 
-        />
-        <FormField 
-          label="Apellidos" 
-          name="lastName"
-          value={formData.lastName} 
-          onChange={handleChange} 
-        />
-      </div>
-
       <FormField 
-        label="Teléfono Chileno (+569...)" 
-        name="phone"
-        value={formData.phone} 
-        onChange={handleChange} 
-        placeholder="+56 9 1234 5678"
-      />
-
-      <FormField 
-        label="Dirección de Despacho" 
-        name="address"
-        value={formData.address} 
-        onChange={handleChange} 
+        label="Nombre Completo" 
+        name="fullName"
+        value={formData.fullName} 
+        onChange={handleChange}
+        placeholder="Juan Pérez" 
       />
 
       <FormField 
@@ -85,7 +67,7 @@ export const CustomerRegisterForm: React.FC<{ onSuccess?: () => void }> = ({ onS
       />
 
       <FormField 
-        label="Contraseña" 
+        label="Contraseña (mínimo 6 caracteres)" 
         type="password" 
         name="password"
         value={formData.password} 

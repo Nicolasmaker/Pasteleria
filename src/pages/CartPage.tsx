@@ -2,6 +2,7 @@ import React from 'react';
 import { MainLayout } from '../components/templates/MainLayout';
 import { useCart } from '../context/CartContext';
 import { Button } from '../components/atoms/Button';
+import { CheckoutButton } from '../components/organisms/CheckoutButton';
 import { formatCurrency } from '../utils/formatters';
 import { Link } from 'react-router-dom';
 
@@ -84,7 +85,6 @@ export const CartPage: React.FC = () => {
               boxShadow: 'var(--shadow-card)',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'flex-end',
               gap: '1rem'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '1.2rem' }}>
@@ -92,18 +92,13 @@ export const CartPage: React.FC = () => {
                 <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>{formatCurrency(total)}</span>
               </div>
               
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <Button 
-                  label="Vaciar Carrito" 
-                  onClick={clearCart}
-                  style={{ backgroundColor: '#999', fontSize: '0.9rem' }}
-                />
-                <Button 
-                  label="Finalizar Compra" 
-                  onClick={() => alert('¡Gracias por tu compra! Esta funcionalidad estará disponible pronto.')}
-                  style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-text)' }}
-                />
-              </div>
+              <CheckoutButton />
+              
+              <Button 
+                label="Vaciar Carrito" 
+                onClick={clearCart}
+                style={{ backgroundColor: '#999', fontSize: '0.9rem', marginTop: '0.5rem' }}
+              />
             </div>
           </div>
         )}

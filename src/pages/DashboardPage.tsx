@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MainLayout } from '../components/templates/MainLayout';
-import { CakeForm } from '../components/organisms/CakeForm';
-import { CakeCard } from '../components/molecules/CakeCard';
-import { useCakes } from '../context/CakeContext';
+import { ProductManager } from '../components/organisms/ProductManager';
+import { CategoryManager } from '../components/organisms/CategoryManager';
+import { BoletaList } from '../components/organisms/BoletaList';
+import { CreateProductForm } from '../components/organisms/CreateProductForm';
 
 export const DashboardPage: React.FC = () => {
-  const { cakes, deleteCake } = useCakes();
+  const [activeTab, setActiveTab] = useState<'productos' | 'categorias' | 'boletas' | 'crear'>('productos');
 
   return (
     <MainLayout>
@@ -14,29 +15,82 @@ export const DashboardPage: React.FC = () => {
           Panel de Administración - Pastelería Los Sabores
         </h1>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', alignItems: 'start' }}>
-          {/* Columna Izquierda: Formulario */}
-          <div>
-            <CakeForm />
-          </div>
+        {/* Pestañas de navegación */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          marginBottom: '2rem', 
+          borderBottom: '2px solid #ddd',
+          flexWrap: 'wrap'
+        }}>
+          <button 
+            onClick={() => setActiveTab('productos')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              background: 'none',
+              borderBottom: activeTab === 'productos' ? '3px solid var(--primary-color)' : 'none',
+              color: activeTab === 'productos' ? 'var(--primary-color)' : '#666',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            📦 Productos
+          </button>
+          <button 
+            onClick={() => setActiveTab('crear')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              background: 'none',
+              borderBottom: activeTab === 'crear' ? '3px solid var(--primary-color)' : 'none',
+              color: activeTab === 'crear' ? 'var(--primary-color)' : '#666',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            ➕ Crear Producto
+          </button>
+          <button 
+            onClick={() => setActiveTab('categorias')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              background: 'none',
+              borderBottom: activeTab === 'categorias' ? '3px solid var(--primary-color)' : 'none',
+              color: activeTab === 'categorias' ? 'var(--primary-color)' : '#666',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            📁 Categorías
+          </button>
+          <button 
+            onClick={() => setActiveTab('boletas')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              background: 'none',
+              borderBottom: activeTab === 'boletas' ? '3px solid var(--primary-color)' : 'none',
+              color: activeTab === 'boletas' ? 'var(--primary-color)' : '#666',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            🧾 Pedidos
+          </button>
+        </div>
 
-          {/* Columna Derecha: Lista de Pasteles */}
-          <div>
-            <h2 style={{ color: 'var(--secondary-color)', marginBottom: '1rem' }}>Inventario de Pasteles</h2>
-            {cakes.length === 0 ? (
-              <p>No hay pasteles registrados aún.</p>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                {cakes.map(cake => (
-                  <CakeCard 
-                    key={cake.id} 
-                    cake={cake} 
-                    onDelete={deleteCake}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Contenido según la pestaña activa */}
+        <div>
+          {activeTab === 'productos' && <ProductManager />}
+          {activeTab === 'crear' && <CreateProductForm />}
+          {activeTab === 'categorias' && <CategoryManager />}
+          {activeTab === 'boletas' && <BoletaList />}
         </div>
       </div>
     </MainLayout>

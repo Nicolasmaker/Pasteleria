@@ -1,74 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AuthContext } from './AuthContext';
 import type { User } from './AuthContext';
+import { authService } from '../services/auth.service';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Cargar usuario de sesión si existe (simulado)
-  useEffect(() => {
+  // NO cargar automáticamente desde localStorage
+  // El usuario debe hacer login explícitamente cada vez
+
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (error) {
-      console.error('Error parsing stored user:', error);
-      localStorage.removeItem('currentUser');
-    }
-  }, []);
-
-  const login = (username: string, pass: string) => {
-    // 1. Admin hardcodeado
-    if (username === 'admin' && pass === '123456') {
-      const adminUser: User = { name: 'Admin', role: 'ADMIN' };
-      setUser(adminUser);
-      localStorage.setItem('currentUser', JSON.stringify(adminUser));
-      localStorage.setItem('token', 'mock-jwt-token-admin'); // Simular token para API
+      setIsLoading(true);
+      const response = await authService.login({ username, password });
+      
+      // Guardar token y usuario
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      setUser(response.user);
+      
+      // Disparar evento personalizado para que CartContext cargue el carrito del usuario
+      window.dispatchEvent(new CustomEvent('user-login', { detail: { userId: response.user.id } }));
+      
       return true;
-    }
-
-    try {
-      // 2. Buscar en usuarios registrados (localStorage)
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const foundUser = users.find((u: any) => u.email === username && u.password === pass);
-
-      if (foundUser) {
-        const { password, ...userWithoutPass } = foundUser;
-        setUser({ ...userWithoutPass, role: 'CUSTOMER' });
-        localStorage.setItem('currentUser', JSON.stringify({ ...userWithoutPass, role: 'CUSTOMER' }));
-        localStorage.setItem('token', 'mock-jwt-token-customer'); // Simular token para API
-        return true;
-      }
-    } catch (error) {
-      console.error('Error reading users:', error);
+    } catch (error: any) {
+      console.error('Error en login:', error.response?.data || error.message);
       return false;
+    } finally {
+      setIsLoading(false);
     }
-
-    console.log('Credenciales inválidas');
-    return false;
   };
 
-  const register = (userData: any) => {
+  const register = async (userData: { email: string; password: string; fullName: string }): Promise<boolean> => {
     try {
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      setIsLoading(true);
+      const response = await authService.register(userData);
       
-      // Verificar si ya existe
-      if (users.some((u: any) => u.email === userData.email)) {
-        return false; // Ya existe
-      }
-
-      const newUser = { ...userData, role: 'CUSTOMER' };
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
+      // Auto-login después del registro
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      setUser(response.user);
       
-      // Auto login después de registro? O pedir login.
-      // Vamos a pedir login para seguir el flujo normal, o podríamos loguearlo directo.
-      // Por ahora solo retornamos true.
+      // Disparar evento personalizado
+      window.dispatchEvent(new CustomEvent('user-login', { detail: { userId: response.user.id } }));
+      
       return true;
-    } catch (error) {
-      console.error('Error registering user:', error);
+    } catch (error: any) {
+      console.error('Error en registro:', error.response?.data || error.message);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,10 +58,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('currentUser');
     localStorage.removeItem('token');
+    
+    // Disparar evento personalizado para limpiar el carrito
+    window.dispatchEvent(new CustomEvent('user-logout'));
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

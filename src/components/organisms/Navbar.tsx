@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
@@ -23,6 +23,9 @@ export const Navbar: React.FC = () => {
           <Link to="/" className="nav-link">INICIO</Link>
           <Link to="/nosotros" className="nav-link">NOSOTROS</Link>
           <Link to="/productos" className="nav-link">PRODUCTOS</Link>
+          {isAuthenticated && user?.role?.toLowerCase() === 'cliente' && (
+            <Link to="/mis-pedidos" className="nav-link">MIS PEDIDOS</Link>
+          )}
         </div>
 
         <div className="navbar-center">
@@ -35,15 +38,16 @@ export const Navbar: React.FC = () => {
           
           {isAuthenticated ? (
              <div className="auth-controls">
-                <span className="user-greeting">Hola, {user?.name}</span>
-                {user?.role === 'ADMIN' && <Link to="/dashboard" className="btn-dashboard">PANEL</Link>}
+                <span className="user-greeting">Hola, {user?.fullName}</span>
+                {user?.role?.toLowerCase() === 'admin' && (
+                  <Link to="/dashboard" className="nav-link" style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>
+                    PANEL
+                  </Link>
+                )}
                 <button onClick={handleLogout} className="btn-logout">SALIR</button>
              </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <Link to="/login" className="nav-link" style={{ fontSize: '0.9rem' }}>ADMIN</Link>
-              <Link to="/cliente" className="btn-compra-online">INGRESAR</Link>
-            </div>
+            <Link to="/login" className="btn-compra-online">INGRESAR</Link>
           )}
 
           {location.pathname === '/productos' && (

@@ -9,7 +9,7 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
     return <Navigate to="/login" />;
   }
 
-  if (user?.role !== 'ADMIN') {
+  if (user?.role?.toLowerCase() !== 'admin') {
     return <Navigate to="/" />;
   }
 

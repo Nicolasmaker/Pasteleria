@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MainLayout } from '../components/templates/MainLayout';
 import { CustomerLoginForm } from '../components/organisms/CustomerLoginForm';
 import { CustomerRegisterForm } from '../components/organisms/CustomerRegisterForm';
@@ -54,6 +55,13 @@ export const CustomerAuthPage: React.FC = () => {
         ) : (
           <CustomerRegisterForm onSuccess={() => setIsLogin(true)} />
         )}
+
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
+          <span style={{ color: '#666' }}>¿Eres administrador? </span>
+          <Link to="/login" style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>
+            Acceso Admin
+          </Link>
+        </div>
       </div>
     </MainLayout>
   );
